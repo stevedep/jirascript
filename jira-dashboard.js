@@ -30,7 +30,7 @@ window.createJiraDashboard = function(config) {
         }
     }
 
-    // Parse XML to ticket objects
+    // Parse XML to ticket objects with HTML preserved
     function parseJiraXML(xmlText) {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
@@ -40,11 +40,18 @@ window.createJiraDashboard = function(config) {
         
         items.forEach(item => {
             try {
+                // Extract description with HTML preserved
                 const descriptionElement = item.querySelector('description');
                 let description = '';
                 if (descriptionElement) {
                     const descText = descriptionElement.textContent || '';
-                    description = descText.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+                    // Keep HTML but clean up common JIRA artifacts
+                    description = descText
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&amp;/g, '&')
+                        .replace(/&quot;/g, '"')
+                        .trim();
                 }
 
                 const ticket = {
@@ -201,6 +208,53 @@ window.createJiraDashboard = function(config) {
                 justify-content: center;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             ">
+                <style>
+                .jira-description {
+                    word-wrap: break-word;
+                }
+                .jira-description p {
+                    margin: 0.5em 0;
+                }
+                .jira-description ul, .jira-description ol {
+                    margin: 0.5em 0;
+                    padding-left: 1.5em;
+                }
+                .jira-description li {
+                    margin: 0.25em 0;
+                }
+                .jira-description strong, .jira-description b {
+                    font-weight: 600;
+                }
+                .jira-description em, .jira-description i {
+                    font-style: italic;
+                }
+                .jira-description code {
+                    background: #f3f4f6;
+                    padding: 0.125em 0.25em;
+                    border-radius: 0.25em;
+                    font-family: monospace;
+                    font-size: 0.875em;
+                }
+                .jira-description pre {
+                    background: #f3f4f6;
+                    padding: 0.75em;
+                    border-radius: 0.375em;
+                    overflow-x: auto;
+                    font-family: monospace;
+                    font-size: 0.875em;
+                }
+                .jira-description a {
+                    color: #3b82f6;
+                    text-decoration: underline;
+                }
+                .jira-description blockquote {
+                    border-left: 4px solid #e5e7eb;
+                    padding-left: 1em;
+                    margin: 0.5em 0;
+                    font-style: italic;
+                    color: #6b7280;
+                }
+                </style>
                 <div style="
                     background: white;
                     border-radius: 12px;
@@ -504,9 +558,9 @@ window.createJiraDashboard = function(config) {
                                                             ` : ''}
                                                         </div>
                                                         <h4 style="margin: 0 0 8px 0; font-weight: 500; color: #111827;">${story.summary}</h4>
-                                                        ${story.description ? `<p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280; line-height: 1.5;">${story.description}</p>` : ''}
+                                                        ${story.description ? `<div style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280; line-height: 1.5;" class="jira-description">${story.description}</div>` : ''}
                                                         
-                                                        <div style="display: flex; gap: 16px; font-size: 12px; color: #6b7280; margin-bottom: 16px;">
+                                                        <div style="display: flex; gap: 16px; font-size: 12px; color: #6b7280; margin-bottom: 12px;">
                                                             <span><strong>Created:</strong> ${formatDate(story.created)}</span>
                                                             <span><strong>Updated:</strong> ${formatDate(story.updated)}</span>
                                                         </div>
@@ -529,7 +583,7 @@ window.createJiraDashboard = function(config) {
                                                                         padding: 12px;
                                                                         margin-bottom: 8px;
                                                                     ">
-                                                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                                                                             <span style="
                                                                                 background: #6b7280;
                                                                                 color: white;
@@ -560,8 +614,8 @@ window.createJiraDashboard = function(config) {
                                                                             ">${task.priority}</span>
                                                                         </div>
                                                                         <div style="font-weight: 500; font-size: 14px; color: #111827; margin-bottom: 6px;">${task.summary}</div>
-                                                                        ${task.description ? `<div style="font-size: 13px; color: #6b7280; line-height: 1.4; margin-bottom: 8px;">${task.description}</div>` : ''}
-                                                                        <div style="display: flex; gap: 16px; font-size: 11px; color: #6b7280;">
+                                                                        ${task.description ? `<div style="font-size: 13px; color: #6b7280; line-height: 1.4; margin-bottom: 8px;" class="jira-description">${task.description}</div>` : ''}
+                                                                        <div style="display: flex; gap: 12px; font-size: 11px; color: #6b7280;">
                                                                             <span><strong>Created:</strong> ${formatDate(task.created)}</span>
                                                                             <span><strong>Updated:</strong> ${formatDate(task.updated)}</span>
                                                                         </div>
@@ -591,7 +645,7 @@ window.createJiraDashboard = function(config) {
                                                             padding: 12px;
                                                             margin-bottom: 8px;
                                                         ">
-                                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                                                                 <span style="
                                                                     background: #6b7280;
                                                                     color: white;
@@ -622,8 +676,8 @@ window.createJiraDashboard = function(config) {
                                                                 ">${task.priority}</span>
                                                             </div>
                                                             <div style="font-weight: 500; font-size: 14px; color: #111827; margin-bottom: 6px;">${task.summary}</div>
-                                                            ${task.description ? `<div style="font-size: 13px; color: #6b7280; line-height: 1.4; margin-bottom: 8px;">${task.description}</div>` : ''}
-                                                            <div style="display: flex; gap: 16px; font-size: 11px; color: #6b7280;">
+                                                            ${task.description ? `<div style="font-size: 13px; color: #6b7280; line-height: 1.4; margin-bottom: 8px;" class="jira-description">${task.description}</div>` : ''}
+                                                            <div style="display: flex; gap: 12px; font-size: 11px; color: #6b7280;">
                                                                 <span><strong>Created:</strong> ${formatDate(task.created)}</span>
                                                                 <span><strong>Updated:</strong> ${formatDate(task.updated)}</span>
                                                             </div>
@@ -711,8 +765,7 @@ window.createJiraDashboard = function(config) {
             console.error('Error:', error);
             renderDashboard([], error.message);
         });
-})();
-    
+})();    
     // Show loading and start the process
     showLoadingPopup();
     
