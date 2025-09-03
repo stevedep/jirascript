@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Install Bookmarklet</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0c0f;
+      --fg: #e7e9ee;
+      --muted: #6b7280;
+      --brand: #2d6cdf;
+      --brand-2: #1f4fb0;
+      --ok: #10b981;
+      --warn: #d97706;
+      --border: rgba(125,125,140,.25);
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --fg: #0b0c0f;
+        --muted: #6b7280;
+        --border: rgba(15,23,42,.12);
+      }
+    }
+    html,body { margin:0; padding:0; }
+    body {
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--fg);
+    }
+    .wrap { max-width: 820px; margin: 36px auto; padding: 0 16px; }
+    h1 { font-size: 28px; line-height: 1.2; margin: 0 0 12px; }
+    p.lead { color: var(--muted); margin-top: 0; }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 16px 0 22px;
+      background: rgba(125,125,140,.05);
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+    .row > * { flex: 1 1 auto; }
+    .btn {
+      display:inline-block;
+      background: var(--brand);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 10px;
+      text-decoration: none;
+      border: 0;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform .02s ease, background .2s ease;
+      box-shadow: 0 6px 16px rgba(45,108,223,.25);
+      text-align: center;
+      user-select: none;
+    }
+    .btn:hover { background: var(--brand-2); }
+    .btn:active { transform: translateY(1px); }
+    .btn.outline {
+      background: transparent; color: var(--brand); border: 1px solid var(--brand);
+      box-shadow: none;
+    }
+    .tiny { font-size: 13px; color: var(--muted); }
+    .code {
+      display:block;
+      width:100%;
+      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(125,125,140,.08);
+      color: var(--fg);
+      overflow:auto;
+      white-space: pre;
+      -webkit-user-select: all;
+      user-select: all;
+    }
+    .hint { color: var(--muted); margin: 10px 0 0; }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    ul { margin: 8px 0 0 18px; }
+    li { margin: 6px 0; }
+    .badges { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .badge {
+      font-size: 12px; padding: 4px 8px; border-radius: 999px; border:1px solid var(--border);
+      background: rgba(125,125,140,.08); color: var(--muted);
+    }
+    footer { margin-top: 28px; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Install bookmarklet</h1>
+    <p class="lead">Drag the button to your bookmarks bar (desktop), or copy the code and paste it into a new bookmark (mobile).</p>
+
+    <div class="card">
+      <div class="row">
+        <a id="dragBtn" class="btn" draggable="true" href="#">Drag this to your bookmarks bar</a>
+        <button id="copyBtn" class="btn outline">Copy code</button>
+        <button id="runBtn" class="btn outline" title="Run once on this page (for testing)">Run once</button>
+      </div>
+      <div class="hint" id="status"></div>
+      <pre id="code" class="code" aria-label="Bookmarklet code"></pre>
+      <div class="hint tiny">Tip: You can rename the bookmark to anything you like after adding it.</div>
+    </div>
+
+    <div class="card" id="desktopHelp">
+      <h3>Desktop install</h3>
+      <ul>
+        <li>Show your bookmarks bar if it’s hidden:
+          <div class="tiny">
+            Chrome/Edge: Ctrl+Shift+B (Windows/Linux) or Cmd+Shift+B (macOS) • Firefox: Ctrl+B or Cmd+B • Safari: View → Show Favorites Bar
+          </div>
+        </li>
+        <li>Drag the blue “Drag this…” button into the bar.</li>
+        <li>Done. Click the new bookmarklet to run it on any page of the same site.</li>
+      </ul>
+    </div>
+
+    <div class="card" id="mobileHelp">
+      <h3>Mobile install</h3>
+      <ul>
+        <li>Tap “Copy code”.</li>
+        <li>Create a new bookmark on any page.</li>
+        <li>Edit the bookmark and paste the code into the URL/location field (replace the page URL).</li>
+        <li>Save. Use it from your bookmarks when you need it.</li>
+      </ul>
+      <div class="hint tiny">iOS Safari: Use the Share button → Add Bookmark (not “Add to Home Screen”). Then edit the bookmark and paste the code into the address field.</div>
+    </div>
+
+    <div class="card">
+      <h3>What this bookmarklet does</h3>
+      <p class="tiny">This example prompts for a key and value and saves it to localStorage on the current site. Replace the code with your own if needed.</p>
+      <div class="badges">
+        <span class="badge">Storage: localStorage</span>
+        <span class="badge">Scope: current site</span>
+        <span class="badge">Persistent</span>
+      </div>
+    </div>
+
+    <footer>
+      Having trouble? Some corporate browsers block “javascript:” bookmarks. Try another browser or install manually via the Copy instructions above.
+    </footer>
+  </div>
+
+  <script>
+    // ===== Configure your bookmarklet here =====
+    // Replace TITLE and CODE with what you want to install.
+    const TITLE = 'Save to localStorage';
+    const CODE =
+      "javascript:(function(){try{var k=prompt('Key to store','myKey');if(!k)return;var cur=(function(){try{return localStorage.getItem(k)||''}catch(e){return''}})();var v=prompt('Value for '+k,cur);if(v===null)return;localStorage.setItem(k,v);alert('Saved '+k+' = '+v)}catch(e){alert('Error: '+(e&&e.message?e.message:e))}})();";
+    // ===========================================
+
+    const $ = sel => document.querySelector(sel);
+    const status = $('#status');
+    const dragBtn = $('#dragBtn');
+    const copyBtn = $('#copyBtn');
+    const runBtn = $('#runBtn');
+    const codeEl  = $('#code');
+
+    // Populate UI
+    dragBtn.textContent = 'Drag “‘ + TITLE + '” to your bookmarks bar';
+    dragBtn.setAttribute('title', TITLE);
+    dragBtn.setAttribute('href', CODE);
+    codeEl.textContent = CODE;
+
+    // Basic platform hints
+    const isTouch = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+    const ua = navigator.userAgent || '';
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isMac = /Macintosh/.test(ua);
+
+    // Copy
+    async function copyCode() {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(CODE);
+        } else {
+          // Fallback
+          const sel = window.getSelection();
+          const range = document.createRange();
+          range.selectNodeContents(codeEl);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          document.execCommand('copy');
+          sel.removeAllRanges();
+        }
+        setStatus('Code copied to clipboard.', 'ok');
+      } catch (e) {
+        setStatus('Could not auto-copy. Select the code above and copy it manually.', 'warn');
+      }
+    }
+
+    // Run once (for testing)
+    function runOnce() {
+      try {
+        // Execute without leaving the page
+        (0,eval)(CODE.replace(/^javascript:/i,''));
+      } catch (e) {
+        setStatus('Error running code: ' + (e && e.message ? e.message : e), 'warn');
+      }
+    }
+
+    copyBtn.addEventListener('click', copyCode);
+    runBtn.addEventListener('click', runOnce);
+
+    // Drag hint
+    dragBtn.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/uri-list', CODE);
+      e.dataTransfer.setData('text/plain', CODE);
+      setStatus('Now drop it onto your bookmarks bar.', 'ok');
+    });
+
+    // Legacy IE (very rare)
+    if (window.external && 'AddFavorite' in window.external) {
+      const legacyBtn = document.createElement('button');
+      legacyBtn.className = 'btn outline';
+      legacyBtn.textContent = 'Add to Favorites (IE)';
+      legacyBtn.onclick = function() {
+        try { window.external.AddFavorite(CODE, TITLE); }
+        catch(e) { setStatus('Could not add favorite automatically.', 'warn'); }
+      };
+      dragBtn.parentNode.appendChild(legacyBtn);
+    }
+
+    // Tailor help visibility
+    document.getElementById('mobileHelp').style.display = isTouch ? 'block' : 'none';
+    document.getElementById('desktopHelp').style.display = isTouch ? 'none' : 'block';
+
+    function setStatus(msg, type) {
+      status.textContent = msg;
+      status.className = 'hint ' + (type || '');
+    }
+
+    // Friendly nudge for common cases
+    setTimeout(() => {
+      if (!isTouch) {
+        setStatus('Tip: If you don’t see your bookmarks bar, press ' + (isMac ? 'Cmd+Shift+B' : 'Ctrl+Shift+B') + '.', ''); 
+      } else if (isIOS) {
+        setStatus('On iOS: Copy code, Add Bookmark via the Share menu, then paste into the URL field.', '');
+      } else {
+        setStatus('On mobile: Copy code, create a bookmark, then paste the code into its URL.', '');
+      }
+    }, 300);
+  </script>
+</body>
+</html>
