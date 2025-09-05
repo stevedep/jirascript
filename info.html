@@ -166,7 +166,7 @@
     console.log(url);
     const config = {
         JIRA_URL: url,
-        BEARER_TOKEN: 'get from local cache'
+        BEARER_TOKEN: localStorage.getItem("authToken")
     };
 
     // Load the main dashboard code from GitHub Pages
