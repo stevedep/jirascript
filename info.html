@@ -149,9 +149,43 @@
   <script>
     // ===== Configure your bookmarklet here =====
     // Replace TITLE and CODE with what you want to install.
-    const TITLE = 'Save to localStorage';
+    const TITLE = 'Show planning';
     const CODE =
-      "javascript:(function(){try{var k=prompt('Key to store','myKey');if(!k)return;var cur=(function(){try{return localStorage.getItem(k)||''}catch(e){return''}})();var v=prompt('Value for '+k,cur);if(v===null)return;localStorage.setItem(k,v);alert('Saved '+k+' = '+v)}catch(e){alert('Error: '+(e&&e.message?e.message:e))}})();";
+      "javascript:(function() {
+    // Your JIRA configuration
+    // Create a URL object
+    const parsedUrl = new URL(window.location.href);
+    
+    // Get the JQL parameter
+    const jqlEncoded = parsedUrl.searchParams.get('jql');
+    
+    // Decode it
+    const jqlDecoded = decodeURIComponent(jqlEncoded);
+    
+    const url = 'https://jira.prd.domain/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?jqlQuery=' + jqlDecoded +'&tempMax=1000';
+    console.log(url);
+    const config = {
+        JIRA_URL: url,
+        BEARER_TOKEN: 'get from local cache'
+    };
+
+    // Load the main dashboard code from GitHub Pages
+    const script = document.createElement('script');
+    script.src = 'https://stevedep.github.io/jirascript/jira-dashboard.js'; // Replace with your actual GitHub Pages URL
+    script.onload = function() {
+        // Once loaded, call the dashboard function with your config
+        if (typeof window.createJiraDashboard === 'function') {
+            window.createJiraDashboard(config);
+        } else {
+            console.error('JIRA Dashboard function not found. Make sure the GitHub Pages file exports createJiraDashboard function.');
+        }
+    };
+    script.onerror = function() {
+        console.error('Failed to load JIRA Dashboard from GitHub Pages');
+    };
+    
+    document.head.appendChild(script);
+})();";
     // ===========================================
 
     const $ = sel => document.querySelector(sel);
