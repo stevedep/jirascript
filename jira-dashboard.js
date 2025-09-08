@@ -295,7 +295,7 @@ window.createJiraDashboard = function(config) {
     showLoading();
     fetchJiraData().then(tickets => {
       renderDashboard(tickets)
-      console.log('JIRA Dashboard rendered with', tickets.length, 'tickets');
+      console.log('JIRA Dashboard rendered with', tickets.length, 'tickets', tickets);
   }).catch(err => { renderDashboard([]); console.error(err); });
 
   })();
