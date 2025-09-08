@@ -92,52 +92,21 @@
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Install bookmarklet</h1>
-    <p class="lead">Drag the button to your bookmarks bar (desktop), or copy the code and paste it into a new bookmark (mobile).</p>
+  <h1>JiraScript bookmarklets</h1>
+  <p class="note">Drag the links below to your browser bookmarks bar. Save your token first, then run the Jira Helper while viewing a JIRA search results page (the page URL must include a <code>jql</code> parameter).</p>
 
-    <div class="card">
-      <div class="row">
-      <a href="javascript:(()=>{ (function() {
-    // Your JIRA configuration
-    // Create a URL object
-    const parsedUrl = new URL(window.location.href);
-    
-    // Get the JQL parameter
-    const jqlEncoded = parsedUrl.searchParams.get('jql');
-    
-    // Decode it
-    const jqlDecoded = decodeURIComponent(jqlEncoded);
-    
-    const url = 'https://jira.prd.domain/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?jqlQuery=' + jqlDecoded +'&tempMax=1000';
-    console.log(url);
-    const config = {
-        JIRA_URL: url,
-        BEARER_TOKEN: localStorage.getItem("authToken")
-    };
+  <!-- Token bookmarklet (as provided) -->
+  <a class="bookmark" href='javascript:(function(){const token = prompt("Please enter your token:"); if (token) {localStorage.setItem("authToken", token);alert("Token saved to local storage.");} else {  alert("No token entered.");}})();'>Save JIRA token</a>
 
-    // Load the main dashboard code from GitHub Pages
-    const script = document.createElement('script');
-    script.src = 'https://stevedep.github.io/jirascript/jira-dashboard.js'; // Replace with your actual GitHub Pages URL
-    script.onload = function() {
-        // Once loaded, call the dashboard function with your config
-        if (typeof window.createJiraDashboard === 'function') {
-            window.createJiraDashboard(config);
-        } else {
-            console.error('JIRA Dashboard function not found. Make sure the GitHub Pages file exports createJiraDashboard function.');
-        }
-    };
-    script.onerror = function() {
-        console.error('Failed to load JIRA Dashboard from GitHub Pages');
-    };
-    
-    document.head.appendChild(script);
-})(); })()">My Jira Helper</a>
-      </div>
-      <div class="hint" id="status"></div>
-      <pre id="code" class="code" aria-label="Bookmarklet code"></pre>
-      <div class="hint tiny">Tip: You can rename the bookmark to anything you like after adding it.</div>
-    </div>
+  <!-- Jira Helper bookmarklet (minor syntax fixes so it works when dragged/run) -->
+  <a class="bookmark" href='javascript:(function(){const parsedUrl=new URL(window.location.href);const jqlEncoded=parsedUrl.searchParams.get("jql")||"";const jqlDecoded=decodeURIComponent(jqlEncoded);const mainUrl=parsedUrl.protocol+"//"+parsedUrl.hostname;const url=mainUrl+"/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?jqlQuery="+encodeURIComponent("'"+jqlDecoded+"'")+"&tempMax=1000";const config={JIRA_URL:url,BEARER_TOKEN:localStorage.getItem("authToken")};const script=document.createElement("script");script.src="https://stevedep.github.io/jirascript/jira-dashboard.js";script.onload=function(){if(typeof window.createJiraDashboard==="function"){window.createJiraDashboard(config);}else{console.error("JIRA Dashboard function not found. Make sure the GitHub Pages file exports createJiraDashboard function.")}};script.onerror=function(){console.error("Failed to load JIRA Dashboard from GitHub Pages")};document.head.appendChild(script);})();'>Run Jira Helper</a>
+
+  <h2 style="margin-top:26px">Where to get a token</h2>
+  <p>Click your profile icon (top-right of the screen) and choose <strong>Personal access tokens</strong>. Example images:</p>
+  <div>
+    <img src="profile.png" alt="Profile icon / menu" />
+    <img src="token.png" alt="Personal access token screen" />
+  </div>
 
 </body>
 </html>
