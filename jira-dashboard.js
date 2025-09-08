@@ -293,7 +293,10 @@ window.createJiraDashboard = function(config) {
 
     // run
     showLoading();
-    fetchJiraData().then(tickets => renderDashboard(tickets)).catch(err => { renderDashboard([]); console.error(err); });
+    fetchJiraData().then(tickets => {
+      renderDashboard(tickets)
+      console.log('JIRA Dashboard rendered with', tickets.length, 'tickets');
+  }).catch(err => { renderDashboard([]); console.error(err); });
 
   })();
 };
