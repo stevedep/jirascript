@@ -196,7 +196,8 @@ window.createJiraDashboard = function(config) {
           html += `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">`;
           html += `<div style="background:#3b82f6;color:white;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:500;">📖 STORY</div>`;
           html += `<a href="${story.link}" target="_blank" style="font-weight:500;color:#3b82f6;text-decoration:none;">${story.key}</a>`;
-          if (subtaskCount) html += `<div style="font-size:12px;color:#6b7280;margin-left:8px;">🧩 ${subtaskCount} Subtask${subtaskCount>1? 's' : ''}</div>`;
+          // subtask count badge next to severity/priority
+          if (subtaskCount) html += `<div title="${subtaskCount} subtasks" style="background:#fde68a;color:#92400e;padding:2px 6px;border-radius:999px;font-size:12px;margin-left:8px;font-weight:600;">🧩 ${subtaskCount}</div>`;
           html += `<div style="background:${getStatusColor(story.status)};color:white;padding:2px 6px;border-radius:4px;font-size:12px;">${story.status}</div>`;
           html += `<div style="background:${getPriorityColor(story.priority)};color:white;padding:2px 6px;border-radius:4px;font-size:12px;">${story.priority}</div>`;
           if (lastComment) html += `<div style="font-size:12px;color:#6b7280;margin-left:8px;">💬 Last: ${formatDate(lastComment.created)}</div>`;
