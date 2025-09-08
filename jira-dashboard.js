@@ -569,9 +569,32 @@ window.createJiraDashboard = function(config) {
                                                                     "
                                                                 >▶</button>
                                                             ` : ''}
+                                                            ${story.comments && story.comments.length > 0 ? `
+                                                                <span style="
+                                                                    font-size: 12px;
+                                                                    color: #6b7280;
+                                                                    margin-left: 8px;
+                                                                ">💬 Last comment: ${formatDate(story.comments[story.comments.length - 1].created)}</span>
+                                                            ` : ''}
                                                         </div>
                                                         <h4 style="margin: 0 0 8px 0; font-weight: 500; color: #111827;">${story.summary}</h4>
-                                                        ${story.description ? `<div style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280; line-height: 1.5;" class="jira-description">${story.description}</div>` : ''}
+                                                        ${story.description ? `
+                                                            <button 
+                                                                data-toggle="description-${assigneeIndex}-${storyIndex}"
+                                                                onclick="window.toggleJiraSection('description-${assigneeIndex}-${storyIndex}')"
+                                                                style="
+                                                                    background: none;
+                                                                    border: none;
+                                                                    font-size: 14px;
+                                                                    cursor: pointer;
+                                                                    color: #3b82f6;
+                                                                    margin-bottom: 8px;
+                                                                "
+                                                            >📝 View Description ▶</button>
+                                                            <div id="description-${assigneeIndex}-${storyIndex}" style="margin: 8px 0 12px 0; display: none;">
+                                                                <div style="font-size: 14px; color: #6b7280; line-height: 1.5; padding: 8px; background: #f8fafc; border-radius: 6px; border: 1px solid #e5e7eb;" class="jira-description">${story.description}</div>
+                                                            </div>
+                                                        ` : ''}
                                                         <!-- Comments toggle button and section -->
                                                         ${story.comments && story.comments.length > 0 ? `
                                                             <button 
