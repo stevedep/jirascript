@@ -554,7 +554,7 @@ window.createJiraDashboard = function(config) {
                                                                         color: #6b7280;
                                                                         padding: 4px;
                                                                     "
-                                                                >▼</button>
+                                                                >▶</button>
                                                             ` : ''}
                                                         </div>
                                                         <h4 style="margin: 0 0 8px 0; font-weight: 500; color: #111827;">${story.summary}</h4>
@@ -566,7 +566,7 @@ window.createJiraDashboard = function(config) {
                                                         </div>
 
                                                         ${tasksByParent[story.key] ? `
-                                                            <div id="story-${assigneeIndex}-${storyIndex}" style="margin-top: 16px; display: block;">
+                                                            <div id="story-${assigneeIndex}-${storyIndex}" style="margin-top: 16px; display: none;">
                                                                 <h5 style="
                                                                     margin: 0 0 8px 0;
                                                                     font-size: 12px;
