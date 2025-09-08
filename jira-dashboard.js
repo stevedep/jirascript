@@ -597,6 +597,65 @@ window.createJiraDashboard = function(config) {
                                                                 </div>
                                                             </div>
                                                         ` : ''}
+                                                        <!-- Always show related tasks section if present -->
+                                                        ${tasksByParent[story.key] ? `
+                                                            <div id="story-${assigneeIndex}-${storyIndex}" style="margin-top: 16px; display: none;">
+                                                                <h5 style="
+                                                                    margin: 0 0 8px 0;
+                                                                    font-size: 12px;
+                                                                    font-weight: 500;
+                                                                    color: #6b7280;
+                                                                    text-transform: uppercase;
+                                                                    letter-spacing: 0.05em;
+                                                                ">Related Tasks</h5>
+                                                                ${tasksByParent[story.key].map(task => `
+                                                                    <div style="
+                                                                        background: white;
+                                                                        border: 1px solid #e5e7eb;
+                                                                        border-radius: 6px;
+                                                                        padding: 12px;
+                                                                        margin-bottom: 8px;
+                                                                    ">
+                                                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                                                            <span style="
+                                                                                background: #6b7280;
+                                                                                color: white;
+                                                                                padding: 2px 6px;
+                                                                                border-radius: 3px;
+                                                                                font-size: 11px;
+                                                                                font-weight: 500;
+                                                                            ">✓ TASK</span>
+                                                                            <a href="${task.link}" target="_blank" style="
+                                                                                font-weight: 500; 
+                                                                                font-size: 14px;
+                                                                                color: #6b7280;
+                                                                                text-decoration: none;
+                                                                            ">${task.key}</a>
+                                                                            <span style="
+                                                                                background: ${getStatusColor(task.status)};
+                                                                                color: white;
+                                                                                padding: 1px 4px;
+                                                                                border-radius: 3px;
+                                                                                font-size: 11px;
+                                                                            ">${task.status}</span>
+                                                                            <span style="
+                                                                                background: ${getPriorityColor(task.priority)};
+                                                                                color: white;
+                                                                                padding: 1px 4px;
+                                                                                border-radius: 3px;
+                                                                                font-size: 11px;
+                                                                            ">${task.priority}</span>
+                                                                        </div>
+                                                                        <div style="font-weight: 500; font-size: 14px; color: #111827; margin-bottom: 6px;">${task.summary}</div>
+                                                                        ${task.description ? `<div style="font-size: 13px; color: #6b7280; line-height: 1.4; margin-bottom: 8px;" class="jira-description">${task.description}</div>` : ''}
+                                                                        <div style="display: flex; gap: 12px; font-size: 11px; color: #6b7280;">
+                                                                            <span><strong>Created:</strong> ${formatDate(task.created)}</span>
+                                                                            <span><strong>Updated:</strong> ${formatDate(task.updated)}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                `).join('')}
+                                                            </div>
+                                                        ` : ''}
                                                         
                                                         <div style="display: flex; gap: 16px; font-size: 12px; color: #6b7280; margin-bottom: 12px;">
                                                             <span><strong>Created:</strong> ${formatDate(story.created)}</span>
