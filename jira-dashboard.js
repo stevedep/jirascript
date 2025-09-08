@@ -54,6 +54,18 @@ window.createJiraDashboard = function(config) {
                         .trim();
                 }
 
+                // Extract comments (if any)
+                let comments = [];
+                const commentsElement = item.querySelector('comments');
+                if (commentsElement) {
+                    comments = Array.from(commentsElement.querySelectorAll('comment')).map(commentEl => ({
+                        id: commentEl.getAttribute('id'),
+                        author: commentEl.getAttribute('author'),
+                        created: commentEl.getAttribute('created'),
+                        body: (commentEl.textContent || '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"').trim()
+                    }));
+                }
+
                 const ticket = {
                     id: item.querySelector('guid')?.textContent || item.querySelector('link')?.textContent || '',
                     key: item.querySelector('key')?.textContent || item.querySelector('title')?.textContent?.split(':')[0] || '',
@@ -66,7 +78,8 @@ window.createJiraDashboard = function(config) {
                     updated: item.querySelector('updated')?.textContent || item.querySelector('pubDate')?.textContent || new Date().toISOString(),
                     created: item.querySelector('created')?.textContent || item.querySelector('pubDate')?.textContent || new Date().toISOString(),
                     parentKey: item.querySelector('parent')?.textContent || undefined,
-                    link: item.querySelector('link')?.textContent || ''
+                    link: item.querySelector('link')?.textContent || '',
+                    comments: comments
                 };
                 
                 if (ticket.key) {
@@ -559,6 +572,31 @@ window.createJiraDashboard = function(config) {
                                                         </div>
                                                         <h4 style="margin: 0 0 8px 0; font-weight: 500; color: #111827;">${story.summary}</h4>
                                                         ${story.description ? `<div style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280; line-height: 1.5;" class="jira-description">${story.description}</div>` : ''}
+                                                        <!-- Comments toggle button and section -->
+                                                        ${story.comments && story.comments.length > 0 ? `
+                                                            <button 
+                                                                data-toggle="comments-${assigneeIndex}-${storyIndex}"
+                                                                onclick="window.toggleJiraSection('comments-${assigneeIndex}-${storyIndex}')"
+                                                                style="
+                                                                    background: none;
+                                                                    border: none;
+                                                                    font-size: 14px;
+                                                                    cursor: pointer;
+                                                                    color: #3b82f6;
+                                                                    margin-bottom: 8px;
+                                                                "
+                                                            >💬 ${story.comments.length} Comment${story.comments.length > 1 ? 's' : ''} ▶</button>
+                                                            <div id="comments-${assigneeIndex}-${storyIndex}" style="margin: 8px 0 12px 0; display: none;">
+                                                                <div style="background: #f1f5f9; border-radius: 6px; padding: 10px;">
+                                                                    ${story.comments.map(comment => `
+                                                                        <div style="margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+                                                                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 2px;"><strong>${comment.author}</strong> <span style="font-size: 11px; color: #94a3b8;">${formatDate(comment.created)}</span></div>
+                                                                            <div style="font-size: 13px; color: #111827;">${comment.body}</div>
+                                                                        </div>
+                                                                    `).join('')}
+                                                                </div>
+                                                            </div>
+                                                        ` : ''}
                                                         
                                                         <div style="display: flex; gap: 16px; font-size: 12px; color: #6b7280; margin-bottom: 12px;">
                                                             <span><strong>Created:</strong> ${formatDate(story.created)}</span>
