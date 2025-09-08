@@ -54,6 +54,17 @@ window.createJiraDashboard = function(config) {
             }));
           }
 
+          // Parse Sprint from customfields
+          let sprint = 'No Sprint';
+          const customfields = item.querySelectorAll('customfield');
+          customfields.forEach(cf => {
+            const name = cf.querySelector('customfieldname')?.textContent || '';
+            if (name === 'Sprint') {
+              const val = cf.querySelector('customfieldvalue')?.textContent;
+              if (val) sprint = val;
+            }
+          });
+
           const ticket = {
             id: item.querySelector('guid')?.textContent || item.querySelector('link')?.textContent || '',
             key: item.querySelector('key')?.textContent || (item.querySelector('title')?.textContent || '').split(':')[0] || '',
@@ -67,7 +78,8 @@ window.createJiraDashboard = function(config) {
             created: item.querySelector('created')?.textContent || item.querySelector('pubDate')?.textContent || new Date().toISOString(),
             parentKey: item.querySelector('parent')?.textContent || undefined,
             link: item.querySelector('link')?.textContent || '',
-            comments
+            comments,
+            sprint
           };
 
           if (ticket.key) tickets.push(ticket);
@@ -108,13 +120,16 @@ window.createJiraDashboard = function(config) {
       return '#6b7280';
     };
 
-    function groupTicketsByAssignee(tickets) {
+    // Group tickets by sprint, then by assignee, then by user stories
+    function groupTicketsBySprintAndAssignee(tickets) {
       return tickets.reduce((acc, t) => {
+        const sprint = t.sprint || 'No Sprint';
+        if (!acc[sprint]) acc[sprint] = {};
         const assignee = t.assignee || 'Unassigned';
-        if (!acc[assignee]) acc[assignee] = { userStories: [], tasks: [], raw: [] };
-        acc[assignee].raw.push(t);
-        if ((t.type || '').toLowerCase().includes('story')) acc[assignee].userStories.push(t);
-        else acc[assignee].tasks.push(t);
+        if (!acc[sprint][assignee]) acc[sprint][assignee] = { userStories: [], tasks: [], raw: [] };
+        acc[sprint][assignee].raw.push(t);
+        if ((t.type || '').toLowerCase().includes('story')) acc[sprint][assignee].userStories.push(t);
+        else acc[sprint][assignee].tasks.push(t);
         return acc;
       }, {});
     }
@@ -131,16 +146,15 @@ window.createJiraDashboard = function(config) {
 
     // render
     function renderDashboard(tickets = []) {
-      const grouped = groupTicketsByAssignee(tickets);
+      const grouped = groupTicketsBySprintAndAssignee(tickets);
       const stats = {
         totalTickets: tickets.length,
         userStories: tickets.filter(t => (t.type || '').toLowerCase().includes('story')).length,
         tasks: tickets.filter(t => (t.type || '').toLowerCase().includes('task')).length,
-        assignees: Object.keys(grouped).length
+        sprints: Object.keys(grouped).length
       };
       currentData = { tickets, groupedTickets: grouped, stats };
 
-      // build HTML incrementally (avoid deep nested template problems)
       let html = '';
       html += `<div id="jira-dashboard-popup" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;font-family:system-ui,Segoe UI,Roboto,sans-serif;">`;
       html += `<div style="background:white;border-radius:12px;width:90%;max-width:1200px;max-height:90%;overflow-y:auto;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">`;
@@ -158,117 +172,47 @@ window.createJiraDashboard = function(config) {
       html += `<div style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:16px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:12px;color:#6b7280;">Total Tickets</div><div style="font-weight:600;font-size:18px;">${stats.totalTickets}</div></div><div style="font-size:20px;color:#3b82f6;">🎫</div></div>`;
       html += `<div style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:16px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:12px;color:#6b7280;">User Stories</div><div style="font-weight:600;font-size:18px;">${stats.userStories}</div></div><div style="font-size:20px;color:#10b981;">📖</div></div>`;
       html += `<div style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:16px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:12px;color:#6b7280;">Tasks</div><div style="font-weight:600;font-size:18px;">${stats.tasks}</div></div><div style="font-size:20px;color:#f59e0b;">✓</div></div>`;
-      html += `<div style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:16px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:12px;color:#6b7280;">Assignees</div><div style="font-weight:600;font-size:18px;">${stats.assignees}</div></div><div style="font-size:20px;color:#8b5cf6;">👥</div></div>`;
+      html += `<div style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:16px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:12px;color:#6b7280;">Sprints</div><div style="font-weight:600;font-size:18px;">${stats.sprints}</div></div><div style="font-size:20px;color:#8b5cf6;">🏁</div></div>`;
       html += `</div>`; // stats end
 
-      // assignees list
-      html += `<div style="display:flex;flex-direction:column;gap:16px;">`;
+      // Sprints list
+      html += `<div style="display:flex;flex-direction:column;gap:24px;">`;
+      Object.entries(grouped).forEach(([sprint, assignees], sprintIndex) => {
+        html += `<div style="background:white;border:2px solid #3b82f6;border-radius:12px;overflow:hidden;">`;
+        html += `<div style="padding:20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:#eff6ff;" onclick="window.toggleJiraSection('sprint-${sprintIndex}')">`;
+        html += `<div style="font-weight:700;color:#1d4ed8;font-size:18px;">${sprint}</div>`;
+        html += `<div><button data-toggle="sprint-${sprintIndex}" data-collapsed-text="▶" data-expanded-text="▼" style="background:none;border:none;font-size:20px;cursor:pointer;color:#3b82f6;">▶</button></div>`;
+        html += `</div>`;
+        html += `<div id="sprint-${sprintIndex}" style="display:none;padding:20px;">`;
 
-      Object.entries(grouped).forEach(([assignee, bucket], assigneeIndex) => {
-        // build tasks by parent for this assignee
-        const tasksByParent = (bucket.tasks || []).reduce((acc, t) => {
-          const parent = t.parentKey || 'standalone';
-          if (!acc[parent]) acc[parent] = [];
-          acc[parent].push(t);
-          return acc;
-        }, {});
-
-        html += `<div style="background:white;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">`;
-        html += `<div style="padding:24px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="window.toggleJiraSection('assignee-${assigneeIndex}')">`;
-        html += `<div style="display:flex;align-items:center;gap:12px;"><div style="width:48px;height:48px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;color:#1d4ed8;font-weight:700;">${assignee.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase()}</div><div><div style="font-weight:700;color:#111827;">${assignee}</div><div style="font-size:12px;color:#6b7280;">${bucket.userStories.length} Stories, ${bucket.tasks.length} Tasks</div></div></div>`;
-        html += `<div><button data-toggle="assignee-${assigneeIndex}" data-collapsed-text="▶" data-expanded-text="▼" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;padding:8px;border-radius:6px;">▶</button></div>`;
-        html += `</div>`; // assignee header
-
-        // assignee content
-        html += `<div id="assignee-${assigneeIndex}" style="padding:24px;display:none;">`;
-
-        // iterate stories
-        (bucket.userStories || []).forEach((story, storyIndex) => {
-          const lastComment = (story.comments && story.comments.length) ? story.comments[story.comments.length - 1] : null;
-          const subtaskCount = (tasksByParent[story.key] || []).length;
-
-          html += `<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;">`;
-
-          // story box (left)
-          html += `<div style="flex:2;border-left:4px solid #3b82f6;background:#f8fafc;border-radius:0 8px 8px 0;">`;
-          html += `<div style="padding:16px;">`;
-          html += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">`;
-          html += `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">`;
-          html += `<div style="background:#3b82f6;color:white;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:500;">📖 STORY</div>`;
-          html += `<a href="${story.link}" target="_blank" style="font-weight:500;color:#3b82f6;text-decoration:none;">${story.key}</a>`;
-          // subtask count badge next to severity/priority
-          if (subtaskCount) html += `<div title="${subtaskCount} subtasks" style="background:#fde68a;color:#92400e;padding:2px 6px;border-radius:999px;font-size:12px;margin-left:8px;font-weight:600;">🧩 ${subtaskCount}</div>`;
-          html += `<div style="background:${getStatusColor(story.status)};color:white;padding:2px 6px;border-radius:4px;font-size:12px;">${story.status}</div>`;
-          html += `<div style="background:${getPriorityColor(story.priority)};color:white;padding:2px 6px;border-radius:4px;font-size:12px;">${story.priority}</div>`;
-          if (lastComment) html += `<div style="font-size:12px;color:#6b7280;margin-left:8px;">💬 Last: ${formatDate(lastComment.created)}</div>`;
-          html += `</div>`; // left meta
-
-          // expand button for related tasks
-          if (tasksByParent[story.key]) {
-            html += `<div><button data-toggle="story-${assigneeIndex}-${storyIndex}" data-collapsed-text="▶" data-expanded-text="▼" onclick="window.toggleJiraSection('story-${assigneeIndex}-${storyIndex}')" style="background:none;border:none;font-size:16px;cursor:pointer;color:#6b7280;padding:4px;">▶</button></div>`;
-          } else {
-            html += `<div style="width:28px"></div>`;
-          }
-
-          html += `</div>`; // story header row
-
-          // summary + description toggle
-          html += `<h4 style="margin:0 0 8px 0;font-weight:500;color:#111827;">${story.summary}</h4>`;
-          if (story.description) {
-            html += `<div>`;
-            html += `<button data-toggle="description-${assigneeIndex}-${storyIndex}" data-collapsed-text="📝 View Description ▶" data-expanded-text="📝 Hide Description ▼" onclick="window.toggleJiraSection('description-${assigneeIndex}-${storyIndex}')" style="background:none;border:none;color:#3b82f6;cursor:pointer;margin-bottom:8px;">📝 View Description ▶</button>`;
-            html += `<div id="description-${assigneeIndex}-${storyIndex}" style="display:none;margin:8px 0 12px 0;"><div class="jira-description" style="padding:8px;background:#ffffff;border-radius:6px;border:1px solid #e5e7eb;color:#6b7280;">${story.description}</div></div>`;
-            html += `</div>`;
-          }
-
-          // related tasks (collapsed by default)
-          if (tasksByParent[story.key]) {
-            html += `<div id="story-${assigneeIndex}-${storyIndex}" style="display:none;margin-top:16px;">`;
-            html += `<h5 style="margin:0 0 8px 0;font-size:12px;font-weight:500;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">Related Tasks</h5>`;
-            tasksByParent[story.key].forEach(task => {
-              html += `<div style="background:white;border:1px solid #e5e7eb;border-radius:6px;padding:12px;margin-bottom:8px;">`;
-              html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><div style="background:#6b7280;color:white;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:500;">✓ TASK</div><a href="${task.link}" target="_blank" style="font-weight:500;font-size:14px;color:#6b7280;text-decoration:none;">${task.key}</a><div style="background:${getStatusColor(task.status)};color:white;padding:1px 4px;border-radius:3px;font-size:11px;margin-left:6px;">${task.status}</div><div style="background:${getPriorityColor(task.priority)};color:white;padding:1px 4px;border-radius:3px;font-size:11px;margin-left:4px;">${task.priority}</div></div>`;
-              html += `<div style="font-weight:500;font-size:14px;color:#111827;margin-bottom:6px;">${task.summary}</div>`;
-              if (task.description) html += `<div class="jira-description" style="font-size:13px;color:#6b7280;line-height:1.4;margin-bottom:8px;">${task.description}</div>`;
-              html += `<div style="display:flex;gap:12px;font-size:11px;color:#6b7280;"><span><strong>Created:</strong> ${formatDate(task.created)}</span><span><strong>Updated:</strong> ${formatDate(task.updated)}</span></div>`;
+        // Per assignee in sprint
+        Object.entries(assignees).forEach(([assignee, bucket], assigneeIndex) => {
+          // Only user stories for this assignee
+          const userStories = bucket.userStories;
+          if (!userStories.length) return;
+          html += `<div style="margin-bottom:24px;background:#f8fafc;border-radius:8px;border-left:4px solid #3b82f6;padding:16px;">`;
+          html += `<div style="font-weight:700;color:#111827;font-size:15px;margin-bottom:8px;">${assignee}</div>`;
+          userStories.forEach((story, storyIndex) => {
+            html += `<div style="margin-bottom:16px;">`;
+            html += `<div style="font-weight:600;font-size:15px;margin-bottom:4px;"><a href="${story.link}" target="_blank" style="color:#3b82f6;text-decoration:none;">${story.key}</a> - ${story.summary}</div>`;
+            html += `<div style="font-size:13px;color:#6b7280;margin-bottom:8px;">${story.description || ''}</div>`;
+            if (story.comments && story.comments.length) {
+              html += `<div style="margin-top:8px;"><strong>Comments:</strong>`;
+              story.comments.forEach(c => {
+                html += `<div style="margin:8px 0 8px 0;padding:8px;background:#fff;border-radius:6px;border:1px solid #e5e7eb;"><span style="color:#3b82f6;font-weight:500;">${c.author}</span> <span style="color:#6b7280;font-size:12px;">${formatDate(c.created)}</span><div style="margin-top:4px;color:#111827;">${c.body}</div></div>`;
+              });
               html += `</div>`;
-            });
+            } else {
+              html += `<div style="color:#94a3b8;font-size:13px;">No comments</div>`;
+            }
             html += `</div>`;
-          }
-
-          html += `</div></div>`; // story box end
-
-          // comments box (right)
-          html += `<div style="flex:1;min-width:220px;max-width:350px;background:#f1f5f9;border-radius:8px;padding:16px;box-sizing:border-box;">`;
-          if (story.comments && story.comments.length) {
-            html += `<button data-toggle="comments-${assigneeIndex}-${storyIndex}" data-collapsed-text="💬 ${story.comments.length} Comment${story.comments.length>1? 's':''} ▶" data-expanded-text="💬 Hide Comments ▼" onclick="window.toggleJiraSection('comments-${assigneeIndex}-${storyIndex}')" style="background:none;border:none;font-size:14px;cursor:pointer;color:#3b82f6;margin-bottom:8px;">💬 ${story.comments.length} Comment${story.comments.length>1? 's':''} ▶</button>`;
-            html += `<div id="comments-${assigneeIndex}-${storyIndex}" style="display:none;margin:8px 0 0 0;">`;
-            story.comments.forEach(c => {
-              html += `<div style="margin-bottom:10px;border-bottom:1px solid #e5e7eb;padding-bottom:8px;"><div style="font-size:12px;color:#6b7280;margin-bottom:2px;"><strong>${c.author}</strong> <span style="font-size:11px;color:#94a3b8;">${formatDate(c.created)}</span></div><div style="font-size:13px;color:#111827;">${c.body}</div></div>`;
-            });
-            html += `</div>`;
-          } else {
-            html += `<div style="color:#94a3b8;font-size:13px;">No comments</div>`;
-          }
-          html += `</div>`; // comments box end
-
-          html += `</div>`; // row end
-        });
-
-        // standalone tasks
-        if (tasksByParent.standalone) {
-          html += `<div><h5 style="margin:0 0 12px 0;font-size:12px;font-weight:500;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;">Standalone Tasks</h5>`;
-          tasksByParent.standalone.forEach(task => {
-            html += `<div style="background:white;border:1px solid #e5e7eb;border-radius:6px;padding:12px;margin-bottom:8px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><div style="background:#6b7280;color:white;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:500;">✓ TASK</div><a href="${task.link}" target="_blank" style="font-weight:500;font-size:14px;color:#6b7280;text-decoration:none;">${task.key}</a><div style="background:${getStatusColor(task.status)};color:white;padding:1px 4px;border-radius:3px;font-size:11px;margin-left:6px;">${task.status}</div><div style="background:${getPriorityColor(task.priority)};color:white;padding:1px 4px;border-radius:3px;font-size:11px;margin-left:4px;">${task.priority}</div></div><div style="font-weight:500;font-size:14px;color:#111827;margin-bottom:6px;">${task.summary}</div>${task.description?`<div class="jira-description" style="font-size:13px;color:#6b7280;line-height:1.4;margin-bottom:8px;">${task.description}</div>`:''}<div style="display:flex;gap:12px;font-size:11px;color:#6b7280;"><span><strong>Created:</strong> ${formatDate(task.created)}</span><span><strong>Updated:</strong> ${formatDate(task.updated)}</span></div></div>`;
           });
           html += `</div>`;
-        }
+        });
 
-        html += `</div>`; // assignee content end
-        html += `</div>`; // assignee card end
+        html += `</div></div>`;
       });
-
-      html += `</div>`; // assignees list
+      html += `</div>`;
 
       html += `</div>`; // padding
       html += `</div>`; // outer modal
